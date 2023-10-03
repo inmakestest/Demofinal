@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Form</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'css3/style.css' %}">
+</head>
+<body>
+    <h2>Welcome to Christ</h2>
+    <button id="showFormButton">Show Form</button>
+    <div id="formContainer" style="display: none;">
+        <form id="myForm" method="post" action="{% url 'schoolapp:order_form' %}" onsubmit="submitForm(event)">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <input type="submit" value="Submit">
+        </form>
+
+        <div id="message" style="display: none;"></div>
+        <p><a href="/">Return to Home</a></p>
+        <p><a href="{% url 'schoolapp:logout' %}">Logout</a></p>
+    </div>
+
+    <script>
+        // JavaScript to show the form
+        $('#showFormButton').click(function () {
+            $('#formContainer').show();
+        });
+
+        // JavaScript to populate the "Courses" dropdown based on the selected department
+        $('#id_department').change(function () {
+            const departmentId = $(this).val();
+            $.get('{% url "schoolapp:load_courses" %}', { department: departmentId }, function (data) {
+                const coursesDropdown = $('#id_courses');
+                coursesDropdown.empty();
+                $.each(data, function (index, course) {
+                    coursesDropdown.append($('<option>', {
+                        value: course.id,
+                        text: course.name
+                    }));
+                });
+            });
+        });
+
+        // JavaScript to handle form submission and display the message
+        $('#myForm').submit(function (event) {
+            event.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: '{% url "schoolapp:order_form" %}',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function (data) {
+                    $('#message').text(data.message);
+                    $('#message').show();
+                }
+            });
+        });
+        const departmentDropdown = $('#id_department');
+departmentDropdown.append($('<option>', {
+    value: 'commerce',
+    text: 'Commerce'
+}));
+departmentDropdown.append($('<option>', {
+    value: 'science',
+    text: 'Science'
+}));
+departmentDropdown.append($('<option>', {
+    value: 'History',
+    text: 'History'
+}));
+
+departmentDropdown.append($('<option>', {
+    value: 'it',
+    text: 'Computer Science'
+}));
+
+        const coursesByDepartment = {
+    commerce: ['BBA', 'BCom', 'MBA'],
+    science: ['Physics', 'Chemistry', 'Biology'],
+    History: ['History', 'BA history', 'Sociology'],
+
+    it: ['BCA', 'BSc Computer Science', 'MCA'],
+
+    // Add more courses for each department as needed
+};
+
+// Function to populate the "Courses" dropdown based on the selected department
+function populateCoursesDropdown(selectedDepartment) {
+    const coursesDropdown = $('#id_courses');
+    coursesDropdown.empty();
+
+    if (selectedDepartment in coursesByDepartment) {
+        const courses = coursesByDepartment[selectedDepartment];
+        courses.forEach(course => {
+            coursesDropdown.append($('<option>', {
+                value: course,
+                text: course
+            }));
+        });
+    }
+}
+
+// Initialize the "Courses" dropdown based on the initial selected department
+const initialSelectedDepartment = departmentDropdown.val();
+populateCoursesDropdown(initialSelectedDepartment);
+
+// Update the "Courses" dropdown when the department changes
+departmentDropdown.change(function () {
+    const selectedDepartment = $(this).val();
+    populateCoursesDropdown(selectedDepartment);
+});
+
+
+    </script>
+<script>
+    function submitForm(event) {
+        event.preventDefault(); // Prevent the form from submitting traditionally
+
+        // You can perform additional form submission handling here if needed
+
+        // Display the message
+        const messageDiv = document.getElementById("message");
+        messageDiv.style.display = "block"; // Show the message div
+        messageDiv.innerText = "Order Confirmed"; // Set the message text
+
+        // Redirect to the order confirmation page after a delay (e.g., 2 seconds)
+        setTimeout(function() {
+            window.location.href = "{% url 'schoolapp:order_confirmation' %}";
+        }, 2000); // 2000 milliseconds (2 seconds) delay
+    }
+</script>
+
+
+</body>
+</html>
+
